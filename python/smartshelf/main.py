@@ -1,4 +1,4 @@
-scriptFolder = "H:/sandbox/raphaelJ/smartshelf/python/"
+scriptFolder = "D:/Documents/maya/2020/prefs/scripts/smartshelf/python/"
 """
 name : reloadAll
 description : reload all the smartshelf modules
@@ -12,8 +12,25 @@ def reloadAll():
         import smartshelf.resource
         reload(smartshelf.resource)
 
-        import smartshelf.ui.settingsdialog
-        reload(smartshelf.ui.settingsdialog)
+        import smartshelf.utils.dock
+        reload(smartshelf.utils.dock)
+
+        import smartshelf.component.iconwidget
+        reload(smartshelf.component.iconwidget)
+        import smartshelf.component.iconthumbnail
+        reload(smartshelf.component.iconthumbnail)
+
+        import smartshelf.view.icondialog
+        reload(smartshelf.view.icondialog)
+        import smartshelf.view.mainwindow
+        reload(smartshelf.view.mainwindow)
+
+        import smartshelf.ui.icondialog
+        reload(smartshelf.ui.icondialog)
+        import smartshelf.ui.iconwidget
+        reload(smartshelf.ui.iconwidget)
+        import smartshelf.ui.mainwindow
+        reload(smartshelf.ui.mainwindow)
 
 
 """
@@ -72,40 +89,6 @@ def compileUis():
             fout.close()
 
 
-def test():
-    import maya.OpenMayaUI as omui
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
-    from shiboken2 import wrapInstance
-
-    widget = omui.MQtUtil.findControl("Shelf")
-    qwidget = wrapInstance(long(widget), QWidget)
-
-    label = QLabel(qwidget)
-    label.setText("Hello!")
-
-    # add label to status line layout
-    #qwidget.layout().addWidget(label)
-
-    el = qwidget
-
-    el = el.layout().itemAt(0).widget()
-    el = el.layout().itemAt(0).widget()
-    el = el.layout().itemAt(1).widget()  # 18 onglets
-    nbTabs = el.layout().count()
-
-    customTab = None
-
-    for tabIndex in range(nbTabs):
-        curTab = el.layout().itemAt(tabIndex).widget()
-
-        if curTab.objectName() == "Custom":
-            customTab = curTab
-
-    print(customTab.layout().count())
-
-
 """
 name : run
 param : 
@@ -126,3 +109,9 @@ def run(needCompileResources=False, needCompileUis=False, needReloadAll=False):
 
     if needReloadAll:
         reloadAll()
+
+    import smartshelf.utils.dock as dockUtils
+
+    from smartshelf.view.mainwindow import MainWindow
+
+    mainWindow = dockUtils.dockify(MainWindow, "Smartshelf")
