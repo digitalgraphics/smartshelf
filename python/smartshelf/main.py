@@ -7,6 +7,11 @@ description : reload all the smartshelf modules
 
 def reloadAll():
     for i in range(2):
+        import smartshelf.view.iconcreationdialog
+        reload(smartshelf.view.iconcreationdialog)
+
+        import smartshelf.component.iconlistwidget
+        reload(smartshelf.component.iconlistwidget)
         import smartshelf.component.flatbutton
         reload(smartshelf.component.flatbutton)
         import smartshelf.resource
@@ -14,19 +19,28 @@ def reloadAll():
 
         import smartshelf.utils.dock
         reload(smartshelf.utils.dock)
+        import smartshelf.utils.file
+        reload(smartshelf.utils.file)
 
         import smartshelf.component.iconwidget
         reload(smartshelf.component.iconwidget)
+
+        import smartshelf.component.pythonhighlighter
+        reload(smartshelf.component.pythonhighlighter)
+        import smartshelf.component.codeplaintextedit
+        reload(smartshelf.component.codeplaintextedit)
         import smartshelf.component.iconthumbnail
         reload(smartshelf.component.iconthumbnail)
 
-        import smartshelf.view.icondialog
-        reload(smartshelf.view.icondialog)
+        import smartshelf.view.iconsearchdialog
+        reload(smartshelf.view.iconsearchdialog)
         import smartshelf.view.mainwindow
         reload(smartshelf.view.mainwindow)
 
-        import smartshelf.ui.icondialog
-        reload(smartshelf.ui.icondialog)
+        import smartshelf.ui.iconcreationdialog
+        reload(smartshelf.ui.iconcreationdialog)
+        import smartshelf.ui.iconsearchdialog
+        reload(smartshelf.ui.iconsearchdialog)
         import smartshelf.ui.iconwidget
         reload(smartshelf.ui.iconwidget)
         import smartshelf.ui.mainwindow
