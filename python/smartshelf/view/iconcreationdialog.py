@@ -1,14 +1,18 @@
 from smartshelf.ui.iconcreationdialog import Ui_iconCreationDialog
+from smartshelf.view.iconsearchdialog import IconSearchDialog
+from smartshelf.component.commandobject import CommandObject
 
-from PySide2.QtWidgets import QDialog, QGraphicsScene
-from PySide2.QtCore import Qt
+import smartshelf.utils.file as fileUtils
+
+from PySide2.QtWidgets import QDialog, QGraphicsScene, QInputDialog, QMessageBox
+from PySide2.QtCore import Qt, QSize
 from PySide2.QtGui import QPixmap, QKeySequence
 
 import maya.mel as mel
 
 
 class IconCreationDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, reposPath, tabLabels, parent=None):
         super(IconCreationDialog, self).__init__(parent=parent)
         self.ui = Ui_iconCreationDialog()
         self.ui.setupUi(self)
@@ -18,10 +22,73 @@ class IconCreationDialog(QDialog):
         self.ui.melButton.pressed.connect(self.melPressed)
         self.ui.pythonButton.pressed.connect(self.pythonPressed)
         self.ui.runButton.pressed.connect(self.runPressed)
+        self.ui.addTabButton.buttonPressed.connect(self.addTabPressed)
 
+        self.ui.containingTabComboBox.addItems(tabLabels)
         self.show()
+        self.iconPath = None
+        self.cmdObj = None
+        self.reposPath = reposPath
 
-        self.ui.iconThumbnail.setIcon(QPixmap("C:/Pictures/noro.png"))
+        self.ui.iconThumbnail.setIcon(QPixmap(":/icon/mayaLogo.png"))
+
+    def addTabPressed(self):
+        nameAlreadyExists = True
+        comboBox = self.ui.containingTabComboBox
+
+        def isAscii(text):
+            try:
+                text.encode('ascii')
+            except UnicodeEncodeError:
+                return False
+            else:
+                return True
+
+        while nameAlreadyExists:
+            nameWrongFormat = True
+
+            while nameWrongFormat:
+                text, ok = QInputDialog.getText(
+                    self, 'New tab', "Enter the name of the new tab")
+
+                if not ok:
+                    return
+
+                if not text:
+                    QMessageBox.warning(self, 'Wrong name format',
+                                        'The name cannot be empty',
+                                        QMessageBox.StandardButton.Ok)
+
+                elif not isAscii(text):
+                    QMessageBox.warning(
+                        self, 'Wrong name format',
+                        'The name cannot contain special character',
+                        QMessageBox.StandardButton.Ok)
+
+                elif text[0].isdigit():
+                    QMessageBox.warning(self, 'Wrong name format',
+                                        'The name cannot start with a number',
+                                        QMessageBox.StandardButton.Ok)
+
+                else:
+                    nameWrongFormat = False
+
+            nameAlreadyExists = False
+
+            for i in range(comboBox.count()):
+                if comboBox.itemText(i) == text:
+                    nameAlreadyExists = True
+                    QMessageBox.warning(
+                        self, 'Existing name',
+                        'The tab "' + text + '" already exists',
+                        QMessageBox.StandardButton.Ok)
+
+        if ok and text:
+            comboBox.addItem(text)
+            comboBox.setCurrentText(text)
+
+    def setTabName(self, tabName):
+        self.ui.containingTabComboBox.setCurrentText(tabName)
 
     def setCodeText(self, text):
         self.ui.codeTextEdit.setText(text)
@@ -45,10 +112,40 @@ class IconCreationDialog(QDialog):
         self.ui.codeTextEdit.setMelCode()
 
     def browseFolderPressed(self):
-        self.ui.iconThumbnail.setIcon(QPixmap("C:/Pictures/noro.png"))
+        iconSearchDialog = IconSearchDialog(self)
+        if iconSearchDialog.exec_():
+            self.iconPath = iconSearchDialog.getSelectedIconPath()
+        self.ui.iconThumbnail.setIcon(QPixmap(self.iconPath))
 
     def keyPressEvent(self, event):
         if ((event.modifiers() and Qt.ControlModifier) and
             (event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter
              or event.key() == Qt.Key_Space)):
             self.runPressed()
+
+    def accept(self):
+        currentTab = self.ui.containingTabComboBox.currentText()
+        nameText = self.ui.nameEdit.text()
+        iconPath = self.reposPath + "/" + currentTab + "/" + nameText + ".png"
+
+        if fileUtils.existingPath(iconPath):
+            QMessageBox.warning(
+                self, 'Existing name', 'A script nammed ' + nameText +
+                " already exists in tab " + currentTab,
+                QMessageBox.StandardButton.Ok)
+            return
+
+        iconPixmap = self.ui.iconThumbnail.getIconPixmap()
+        iconPixmap = iconPixmap.scaled(QSize(64, 64), Qt.KeepAspectRatio,
+                                       Qt.SmoothTransformation)
+
+        self.cmdObj = CommandObject()
+        self.cmdObj.setIconPath("")
+
+        super(IconCreationDialog, self).accept()
+
+    def getCommandObject(self):
+        return self.cmdObj
+
+    def getTabName(self):
+        self.ui.containingTabComboBox.currentText()

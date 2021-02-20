@@ -16,7 +16,6 @@ class IconWidget(QWidget):
         self.showLabel = showLabel
 
         self.setToolTip(self.text)
-
         self.defaultStyleSheet = self.styleSheet()
 
     def setSize(self, size):

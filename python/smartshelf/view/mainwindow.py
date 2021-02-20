@@ -1,11 +1,14 @@
 from smartshelf.ui.mainwindow import Ui_mainWindow
-from smartshelf.component.iconwidget import IconWidget
+from smartshelf.view.iconcreationdialog import IconCreationDialog
+from smartshelf.component.iconlistwidget import IconListWidget
 
-from PySide2.QtWidgets import QMainWindow, QListWidgetItem, QWidget, QLabel, QListWidget
+from PySide2.QtWidgets import QMainWindow, QWidget, QLabel, QListWidget
 from PySide2.QtCore import QSize, Qt
 from PySide2.QtGui import QIcon, QPixmap, QImage
 
-from smartshelf.view.iconsearchdialog import IconSearchDialog
+import smartshelf.utils.file as fileUtils
+
+import sys
 
 
 class MainWindow(QMainWindow):
@@ -17,40 +20,100 @@ class MainWindow(QMainWindow):
         self.ui.addButton.buttonPressed.connect(self.addIconPressed)
         self.ui.settingsButton.buttonPressed.connect(self.settingsPressed)
 
-        self.list = self.ui.listWidget
+        self.sharedRepos = self.historyPath = [
+            s for s in sys.path if 'prefs' in s
+        ][0] + "/smartshelfSharedRepository"
 
+        self.localRepos = self.historyPath = [
+            s for s in sys.path if 'prefs' in s
+        ][0] + "/smartshelfRepository"
+
+        self.initCommands()
+
+    def initCommands(self):
+        self.loadLocalRepos()
         self.setIconSize(QSize(32, 32))
 
-    def addIcon(self, label, pixmap):
-        widget = IconWidget(label, pixmap)
+    def loadLocalRepos(self):
+        if not fileUtils.existingPath(self.localRepos):
+            fileUtils.createFolder(self.localRepos)
+            return
 
-        item = QListWidgetItem()
+        tabPaths = fileUtils.getFolders(self.localRepos)
 
-        self.list.insertItem(self.list.count(), item)
-        self.list.setItemWidget(item, widget)
-        curSize = self.list.iconSize()
-        item.setSizeHint(curSize)
-        widget.setSize(curSize)
+        for tabPath in tabPaths:
+            tabName = fileUtils.getFolderBaseName(tabPath)
+            self.createTab(tabName)
+
+    def createTab(self, tabName):
+        iconListWidget = IconListWidget()
+
+        iconListWidget.fileDropped.connect(self.fileDropped)
+        iconListWidget.textDropped.connect(self.textDropped)
+
+        self.ui.tabWidget.addTab(iconListWidget, tabName)
+
+    def textDropped(self, text):
+        tabName = self.ui.tabWidget.tabText(self.ui.currentIndex())
+        self.createIcon(tabName=tabName, codeText=text)
+
+    def fileDropped(self, filePath):
+        tabName = self.ui.tabWidget.tabText(self.ui.currentIndex())
+        self.createIcon(tabName=tabName, codePath=filePath)
+
+    def createIcon(self, tabName=None, codeText=None, codePath=None):
+        tabWidget = self.ui.tabWidget
+        tabLabels = []
+
+        for i in range(tabWidget.count()):
+            tabLabels.append(tabWidget.tabText(i))
+
+        iconCreationDialog = IconCreationDialog(self.localRepos, tabLabels,
+                                                self)
+
+        if tabName:
+            iconCreationDialog.setTabName(tabName)
+        elif codeText:
+            iconCreationDialog.setCodeText(codeText)
+        elif codePath:
+            iconCreationDialog.setCodePath(codePath)
+
+        iconCreationDialog.show()
+
+        def commandObjCreated(ref):
+            print ref
+            cmdObj = iconCreationDialog.getCommandObject()
+            tabName = iconCreationDialog.getTabName()
+            ref.addCommandObjToTab(cmdObj, tabName)
+
+        iconCreationDialog.accepted.connect(lambda: commandObjCreated(self))
+
+    def addCommandObjToTab(self, cmdObj, tabName):
+        print "coucou"
 
     def settingsPressed(self):
-        iconSearchDialog = IconSearchDialog(self)
-        if iconSearchDialog.exec_():
-            print iconSearchDialog.getSelectedIconPath()
+        pass
 
     def addIconPressed(self):
-        self.currentList().createIcon()
+        self.createIcon()
 
     def currentList(self):
-        tab = self.ui.tabWidget.currentWidget()
-        return tab.findChild(QListWidget)
+        return self.ui.tabWidget.currentWidget()
 
     def setIconSize(self, size):
-        self.list.hide()
-        self.list.clear()
+        return
 
-        self.list.setIconSize(size)
+        tabWidget = self.ui.tabWidget
 
-        for i in range(100):
-            self.addIcon(str(i), QPixmap("C:/Desktop/icon.png"))
+        for i in range(tabWidget.count()):
+            iconListWidget = tabWidget.widget(i)
 
-        self.list.show()
+            iconListWidget.hide()
+            iconListWidget.clear()
+
+            iconListWidget.setIconSize(size)
+
+            for i in range(100):
+                iconListWidget.addIcon(str(i), QPixmap("C:/Desktop/icon.png"))
+
+            iconListWidget.show()

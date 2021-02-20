@@ -1,22 +1,57 @@
-from PySide2.QtWidgets import QListWidget
-from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QListWidget, QListWidgetItem
+from PySide2.QtCore import Qt, Signal, QSize
 
-from smartshelf.view.iconcreationdialog import IconCreationDialog
+from smartshelf.component.iconwidget import IconWidget
 
 
 class IconListWidget(QListWidget):
+
+    fileDropped = Signal(str)
+    textDropped = Signal(str)
+
     def __init__(self, parent=None):
         super(IconListWidget, self).__init__(parent=parent)
 
-    def createIcon(self, codeText=None, codePath=None):
-        iconCreationDialog = IconCreationDialog(self)
+        self.setStyleSheet("""
+        QListWidget::item {
+            border: none;
+            outline: 0;
+        }
 
-        if codeText:
-            iconCreationDialog.setCodeText(codeText)
-        elif codePath:
-            iconCreationDialog.setCodePath(codePath)
+        QListWidget::item:selected {
+            background-color: transparent;
+        }
 
-        iconCreationDialog.show()
+        QListWidget{
+            border: none;
+            outline: 0;
+            background-color: transparent;
+        }
+        """)
+
+        self.setViewMode(self.ListMode)
+        self.setSpacing(3)
+        self.setResizeMode(self.Adjust)
+        self.setWrapping(True)
+        self.setFlow(self.LeftToRight)
+        self.setMovement(self.Free)
+        self.setDefaultDropAction(Qt.MoveAction)
+        self.setDragDropMode(self.DragDrop)
+        self.setDragEnabled(True)
+        self.setEditTriggers(self.NoEditTriggers)
+        self.setAcceptDrops(True)
+        self.setMinimumSize(QSize(40, 40))
+
+    def addIcon(self, label, pixmap):
+        widget = IconWidget(label, pixmap)
+
+        item = QListWidgetItem()
+
+        self.insertItem(self.count(), item)
+        self.setItemWidget(item, widget)
+        curSize = self.iconSize()
+        item.setSizeHint(curSize)
+        widget.setSize(curSize)
 
     # The following three methods set up dragging and dropping for the app
     def dragEnterEvent(self, event):
@@ -38,10 +73,10 @@ class IconListWidget(QListWidget):
 
             if len(urls) > 0:
                 path = urls[0].toLocalFile()
-                self.createIcon(codePath=path)
+                self.fileDropped.emit(path)
 
         elif event.mimeData().hasText():
-            self.createIcon(codeText=event.mimeData().text())
+            self.textDropped.emit(event.mimeData().text())
 
         else:
             super(IconListWidget, self).dropEvent(event)

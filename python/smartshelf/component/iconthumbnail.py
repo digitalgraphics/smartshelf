@@ -12,6 +12,7 @@ class IconThumbnail(QtWidgets.QGraphicsView):
         self.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
 
         self.setAcceptDrops(True)
+        self.iconPixmap = None
 
     def contextMenuEvent(self, event):
         menu = QtWidgets.QMenu(self)
@@ -48,12 +49,17 @@ class IconThumbnail(QtWidgets.QGraphicsView):
     def setIcon(self, pixmap):
 
         if pixmap.isNull():
-            print " null image "
+            pixmap = QPixmap(":/icon/mayaLogo.png")
+
+        self.iconPixmap = pixmap
 
         scene = QGraphicsScene()
         self.setScene(scene)
         scene.addPixmap(pixmap)
         self.fitInView(scene.itemsBoundingRect(), Qt.KeepAspectRatio)
+
+    def getIconPixmap(self):
+        return self.iconPixmap
 
     # The following three methods set up dragging and dropping for the app
     def dragEnterEvent(self, event):

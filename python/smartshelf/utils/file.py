@@ -171,48 +171,16 @@ def createFolder(folderPath):
     os.mkdir(folderPath)
 
 
-"""
-name : getFolders
-description : get an objets corresponging to the inner folder
-    hierarchy of the given folder path
-param : 
-    - filterKeyword : a keyword to filter the inner folder
-    - filterMode : the way to apply the filter keyword
-return : an objet that represents the hierarchy of the inner folders
-"""
+def getFolders(path):
 
+    dirs = []
 
-def getFolders(path, filterKeyword=None, filterMode=None):
+    for filename in os.listdir(path):
+        curPath = os.path.join(path, filename)
+        if os.path.isdir(path):
+            dirs.append(curPath)
 
-    # check if the directory contains the filter keyword in
-    # its children
-    def dirContainsKeyword(curPath):
-        if filterKeyword == None:
-            return True
-
-        for root, dirs, files in os.walk(curPath, topdown=False):
-            if (filterMode == FilterMode.FileOnly
-                    or filterMode == FilterMode.FolderAndFile) and any(
-                        filterKeyword.lower() in s.lower() for s in files):
-                return True
-            if (filterMode == FilterMode.FolderOnly
-                    or filterMode == FilterMode.FolderAndFile
-                ) and filterKeyword.lower() in getFolderBaseName(root).lower():
-                return True
-
-        return False
-
-    # convert a directory to the object with the hierarchy
-    def dirToDict(curPath):
-        curDir = dict()
-        for filename in os.listdir(curPath):
-            path = os.path.join(curPath, filename)
-            if os.path.isdir(path) and dirContainsKeyword(path):
-                curDir[filename] = dirToDict(path)
-
-        return curDir
-
-    return dirToDict(path)
+    return dirs
 
 
 """

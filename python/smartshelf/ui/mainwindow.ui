@@ -131,6 +131,9 @@
            <number>0</number>
           </property>
           <item>
+           <widget class="QListWidget" name="listWidget_2"/>
+          </item>
+          <item>
            <widget class="IconListWidget" name="listWidget">
             <property name="minimumSize">
              <size>
@@ -196,11 +199,6 @@ QListWidget{
            </widget>
           </item>
          </layout>
-        </widget>
-        <widget class="QWidget" name="tab_3">
-         <attribute name="title">
-          <string>Page</string>
-         </attribute>
         </widget>
         <widget class="QWidget" name="tab_2">
          <attribute name="title">
