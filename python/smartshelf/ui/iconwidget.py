@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:/Documents/maya/2020/prefs/scripts/smartshelf/python/smartshelf/ui/iconwidget.ui'
 #
-# Created: Sat Feb 20 12:25:52 2021
+# Created: Sun Feb 21 12:09:12 2021
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!

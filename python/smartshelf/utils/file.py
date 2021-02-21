@@ -29,12 +29,12 @@ return : the path of the thumbnail
 
 
 def getPathThumbnail(filePath):
-    thumbnailPath = filePath.replace(".ma", ".jpg")
+    thumbnailPath = filePath.replace(".py", ".png").replace(".mel", ".png")
     return thumbnailPath
 
 
 """
-name : getFileThumbnail
+name : getCodeThumbnail
 description : get the tumbnail File of the given maya file 
     (default icon if none)
 param : 
@@ -43,8 +43,8 @@ return : the path of the thumbnail
 """
 
 
-def getFileThumbnail(filePath):
-    thumbnailPath = filePath.replace(".ma", ".jpg")
+def getCodeThumbnail(filePath):
+    thumbnailPath = getPathThumbnail(filePath)
 
     if os.path.exists(thumbnailPath):
         return thumbnailPath
@@ -254,7 +254,7 @@ def removeMayaFiles(filePaths):
         if os.path.exists(path):
             os.remove(path)
 
-            thumbnailPath = getFileThumbnail(path)
+            thumbnailPath = getCodeThumbnail(path)
             if os.path.exists(thumbnailPath):
                 os.remove(thumbnailPath)
 
@@ -264,38 +264,31 @@ def moveMayaFilesToDir(srcPaths, destDir):
         if normPath(destDir) != normPath(getFolderPathOfFile(path)):
             shutil.move(path, destDir)
 
-            thumbnailPath = getFileThumbnail(path)
+            thumbnailPath = getCodeThumbnail(path)
             if os.path.exists(thumbnailPath):
                 shutil.move(thumbnailPath, destDir)
 
 
-def getMayaFilesFromFolder(folderPath, filterKeyword=False, recursive=False):
+def getCodeFilesFromFolder(folderPath, filterKeyword=False, recursive=False):
     tmpList = []
 
     if recursive:
-        for root, dirs, files in os.walk(folderPath, topdown=False):
-            for name in files:
-                if name.endswith(".ma"):
+        for root, _, files in os.walk(folderPath, topdown=False):
+            for filename in files:
+                if filename.endswith(".py") or filename.endswith(".mel"):
                     if not filterKeyword or filterKeyword.lower(
-                    ) in name.lower():
+                    ) in filename.lower():
                         tmpList.append(
-                            os.path.join(root, name).replace("\\", "/"))
+                            os.path.join(root, filename).replace("\\", "/"))
     else:
         for filename in os.listdir(folderPath):
-            if filename.endswith(".ma"):
-                if not filterKeyword or filterKeyword.lower() in name.lower():
+            if filename.endswith(".py") or filename.endswith(".mel"):
+                if not filterKeyword or filterKeyword.lower(
+                ) in filename.lower():
                     tmpList.append(
                         os.path.join(folderPath, filename).replace("\\", "/"))
-    fileList = []
 
-    for filePath in tmpList:
-        curDict = dict()
-        curDict["filePath"] = filePath
-        curDict["thumbnailPath"] = getFileThumbnail(filePath)
-
-        fileList.append(curDict)
-
-    return fileList
+    return tmpList
 
 
 def writeJsonFile(data, filePath):
@@ -309,3 +302,29 @@ def readJsonFile(filePath):
             return json.load(json_file)
     else:
         return {}
+
+
+def readTextFile(filePath):
+    if existingPath(filePath):
+        text = ''.join(open(filePath).readlines())
+        return text
+    else:
+        return ""
+
+
+def saveImage(pixmap, name, folderPath):
+    path = folderPath + "/" + name + ".png"
+    pixmap.save(path, "png")
+
+
+def saveCode(code, name, folderPath, isPython):
+    path = folderPath + "/" + name
+
+    if isPython:
+        path += ".py"
+    else:
+        path += ".mel"
+
+    file = open(path, "w")
+    file.write(code)
+    file.close()

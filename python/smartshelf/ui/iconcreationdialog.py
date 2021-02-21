@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:/Documents/maya/2020/prefs/scripts/smartshelf/python/smartshelf/ui/iconcreationdialog.ui'
 #
-# Created: Sat Feb 20 12:25:52 2021
+# Created: Sun Feb 21 12:09:12 2021
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -97,9 +97,9 @@ class Ui_iconCreationDialog(object):
         self.nameEdit = QtWidgets.QLineEdit(self.shortcutNameWidget)
         self.nameEdit.setObjectName("nameEdit")
         self.horizontalLayout_2.addWidget(self.nameEdit)
-        self.checkBox = QtWidgets.QCheckBox(self.shortcutNameWidget)
-        self.checkBox.setObjectName("checkBox")
-        self.horizontalLayout_2.addWidget(self.checkBox)
+        self.visibleCheckBox = QtWidgets.QCheckBox(self.shortcutNameWidget)
+        self.visibleCheckBox.setObjectName("visibleCheckBox")
+        self.horizontalLayout_2.addWidget(self.visibleCheckBox)
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.shortcutNameWidget)
         self.containingTabLabel_2 = QtWidgets.QLabel(self.groupBox)
         self.containingTabLabel_2.setObjectName("containingTabLabel_2")
@@ -190,7 +190,7 @@ class Ui_iconCreationDialog(object):
         iconCreationDialog.setWindowTitle(QtWidgets.QApplication.translate("iconCreationDialog", "Dialog", None, -1))
         self.iconPreviewLabel.setText(QtWidgets.QApplication.translate("iconCreationDialog", "Icon Preview", None, -1))
         self.shortcutNameLabel_2.setText(QtWidgets.QApplication.translate("iconCreationDialog", "Command Name", None, -1))
-        self.checkBox.setText(QtWidgets.QApplication.translate("iconCreationDialog", "visible", None, -1))
+        self.visibleCheckBox.setText(QtWidgets.QApplication.translate("iconCreationDialog", "visible", None, -1))
         self.containingTabLabel_2.setText(QtWidgets.QApplication.translate("iconCreationDialog", "Containing Tab", None, -1))
         self.label_2.setText(QtWidgets.QApplication.translate("iconCreationDialog", "Command", None, -1))
         self.pythonButton.setText(QtWidgets.QApplication.translate("iconCreationDialog", "Python", None, -1))

@@ -17,6 +17,8 @@ def reloadAll():
 
         import smartshelf.utils.dock
         reload(smartshelf.utils.dock)
+        import smartshelf.utils.mayautils
+        reload(smartshelf.utils.mayautils)
         import smartshelf.utils.file
         reload(smartshelf.utils.file)
 

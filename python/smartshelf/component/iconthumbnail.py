@@ -2,7 +2,7 @@ import importlib
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2.QtGui import QIcon, QPixmap, QImage, QFont, QKeySequence
 from PySide2.QtCore import QUrl, Qt
-from PySide2.QtWidgets import QGraphicsScene
+from PySide2.QtWidgets import QGraphicsScene, QMessageBox
 
 
 class IconThumbnail(QtWidgets.QGraphicsView):
@@ -44,7 +44,9 @@ class IconThumbnail(QtWidgets.QGraphicsView):
             ('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif')):
             self.setIcon(QPixmap(path))
         else:
-            print "not an image"
+            QMessageBox.warning(self, 'Wrong file format',
+                                "The selected file is not an image",
+                                QMessageBox.StandardButton.Ok)
 
     def setIcon(self, pixmap):
 

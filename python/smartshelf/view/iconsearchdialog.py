@@ -1,5 +1,6 @@
 from smartshelf.ui.iconsearchdialog import Ui_iconSearchDialog
 from smartshelf.component.iconwidget import IconWidget
+from smartshelf.component.commandobject import CommandObject
 
 import smartshelf.utils.file as fileUtils
 
@@ -87,7 +88,7 @@ class IconSearchDialog(QDialog):
         self.worker.progress.connect(self.reportProgress)
         self.worker.maximumComputed.connect(self.setMaxProgressBar)
 
-        self.ui.listWidget.hide()
+        self.ui.iconsWidget.hide()
         self.ui.progressBar.setValue(0)
         self.ui.loadingWidget.show()
 
@@ -104,7 +105,7 @@ class IconSearchDialog(QDialog):
 
     def hideProgressBar(self):
         self.ui.loadingWidget.hide()
-        self.ui.listWidget.show()
+        self.ui.iconsWidget.show()
 
     def filterIcons(self, filter):
         for i in range(self.ui.listWidget.count()):
@@ -124,7 +125,12 @@ class IconSearchDialog(QDialog):
         label = fileUtils.getFileBaseName(filepath,
                                           withExtension=False).lstrip(":")
 
-        widget = IconWidget(label, pixmap)
+        cmdObj = CommandObject()
+        cmdObj.setIconPixmap(pixmap)
+        cmdObj.setCommandName(label)
+        cmdObj.setIsVisibleName(False)
+
+        widget = IconWidget(cmdObj)
         item = QListWidgetItem()
 
         self.ui.listWidget.insertItem(self.ui.listWidget.count(), item)

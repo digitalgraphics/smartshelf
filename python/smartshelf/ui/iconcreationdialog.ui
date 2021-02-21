@@ -205,7 +205,7 @@
             <widget class="QLineEdit" name="nameEdit"/>
            </item>
            <item>
-            <widget class="QCheckBox" name="checkBox">
+            <widget class="QCheckBox" name="visibleCheckBox">
              <property name="text">
               <string>visible</string>
              </property>

@@ -32,10 +32,7 @@ class IconCreationDialog(QDialog):
 
         self.ui.iconThumbnail.setIcon(QPixmap(":/icon/mayaLogo.png"))
 
-    def addTabPressed(self):
-        nameAlreadyExists = True
-        comboBox = self.ui.containingTabComboBox
-
+    def checkName(self, name):
         def isAscii(text):
             try:
                 text.encode('ascii')
@@ -43,6 +40,30 @@ class IconCreationDialog(QDialog):
                 return False
             else:
                 return True
+
+        if not name:
+            QMessageBox.warning(self, 'Wrong name format',
+                                'The name cannot be empty',
+                                QMessageBox.StandardButton.Ok)
+            return False
+
+        if not isAscii(name):
+            QMessageBox.warning(self, 'Wrong name format',
+                                'The name cannot contain special character',
+                                QMessageBox.StandardButton.Ok)
+            return False
+
+        if name[0].isdigit():
+            QMessageBox.warning(self, 'Wrong name format',
+                                'The name cannot start with a number',
+                                QMessageBox.StandardButton.Ok)
+            False
+
+        return True
+
+    def addTabPressed(self):
+        nameAlreadyExists = True
+        comboBox = self.ui.containingTabComboBox
 
         while nameAlreadyExists:
             nameWrongFormat = True
@@ -54,24 +75,7 @@ class IconCreationDialog(QDialog):
                 if not ok:
                     return
 
-                if not text:
-                    QMessageBox.warning(self, 'Wrong name format',
-                                        'The name cannot be empty',
-                                        QMessageBox.StandardButton.Ok)
-
-                elif not isAscii(text):
-                    QMessageBox.warning(
-                        self, 'Wrong name format',
-                        'The name cannot contain special character',
-                        QMessageBox.StandardButton.Ok)
-
-                elif text[0].isdigit():
-                    QMessageBox.warning(self, 'Wrong name format',
-                                        'The name cannot start with a number',
-                                        QMessageBox.StandardButton.Ok)
-
-                else:
-                    nameWrongFormat = False
+                nameWrongFormat = not self.checkName(text)
 
             nameAlreadyExists = False
 
@@ -126,11 +130,16 @@ class IconCreationDialog(QDialog):
     def accept(self):
         currentTab = self.ui.containingTabComboBox.currentText()
         nameText = self.ui.nameEdit.text()
-        iconPath = self.reposPath + "/" + currentTab + "/" + nameText + ".png"
+
+        if not self.checkName(nameText):
+            return
+
+        folderPath = self.reposPath + "/" + currentTab
+        iconPath = folderPath + "/" + nameText + ".png"
 
         if fileUtils.existingPath(iconPath):
             QMessageBox.warning(
-                self, 'Existing name', 'A script nammed ' + nameText +
+                self, 'Existing name', 'A script named ' + nameText +
                 " already exists in tab " + currentTab,
                 QMessageBox.StandardButton.Ok)
             return
@@ -140,7 +149,12 @@ class IconCreationDialog(QDialog):
                                        Qt.SmoothTransformation)
 
         self.cmdObj = CommandObject()
-        self.cmdObj.setIconPath("")
+        self.cmdObj.setFolderPath(folderPath)
+        self.cmdObj.setIconPixmap(iconPixmap)
+        self.cmdObj.setCommandName(nameText)
+        self.cmdObj.setIsVisibleName(self.ui.visibleCheckBox.isChecked())
+        self.cmdObj.setCommand(self.ui.codeTextEdit.getText(),
+                               self.ui.pythonButton.isChecked())
 
         super(IconCreationDialog, self).accept()
 
@@ -148,4 +162,4 @@ class IconCreationDialog(QDialog):
         return self.cmdObj
 
     def getTabName(self):
-        self.ui.containingTabComboBox.currentText()
+        return self.ui.containingTabComboBox.currentText()

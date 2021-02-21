@@ -1,13 +1,19 @@
-from PySide2.QtWidgets import QListWidget, QListWidgetItem
+from PySide2.QtWidgets import QListWidget, QListWidgetItem, QMenu
 from PySide2.QtCore import Qt, Signal, QSize
+from PySide2.QtGui import QGuiApplication
 
 from smartshelf.component.iconwidget import IconWidget
+from smartshelf.component.commandobject import CommandObject
+
+import smartshelf.utils.mayautils as mayaUtils
 
 
 class IconListWidget(QListWidget):
 
     fileDropped = Signal(str)
     textDropped = Signal(str)
+    commandRemoved = Signal(list)
+    commandEdited = Signal(list)
 
     def __init__(self, parent=None):
         super(IconListWidget, self).__init__(parent=parent)
@@ -42,13 +48,49 @@ class IconListWidget(QListWidget):
         self.setAcceptDrops(True)
         self.setMinimumSize(QSize(40, 40))
 
-    def addIcon(self, label, pixmap):
-        widget = IconWidget(label, pixmap)
+    def contextMenuEvent(self, event):
 
+        item = self.itemAt(event.pos())
+
+        if not item:
+            super(IconListWidget, self).contextMenuEvent(event)
+            return
+
+        iconWidget = self.itemWidget(item)
+        cmdObj = iconWidget.getCommandObject()
+
+        menu = QMenu(self)
+
+        editAction = menu.addAction("Edit")
+        copyCodeAction = menu.addAction("Copy code")
+        removeAction = menu.addAction("Remove")
+
+        action = menu.exec_(self.mapToGlobal(event.pos()))
+
+        if action == editAction:
+            self.commandEdited.emit([cmdObj])
+
+        if action == copyCodeAction:
+            clipboard = QGuiApplication.clipboard()
+            clipboard.setText(cmdObj.getCommand())
+            mayaUtils.printWarning('Code from "' + cmdObj.getCommandName() +
+                                   '" is copied into the clipboard')
+
+        if action == removeAction:
+            self.takeItem(self.row(item))
+            self.commandRemoved.emit([cmdObj])
+
+    # def mousePressEvent(self, event):
+    #     if event.button() == Qt.RightButton:
+    #         pass
+
+    def addIcon(self, cmdObj):
+        widget = IconWidget(cmdObj)
         item = QListWidgetItem()
 
         self.insertItem(self.count(), item)
         self.setItemWidget(item, widget)
+
         curSize = self.iconSize()
         item.setSizeHint(curSize)
         widget.setSize(curSize)

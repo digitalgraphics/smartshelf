@@ -2,7 +2,7 @@ import importlib
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2.QtGui import QIcon, QPixmap, QImage, QFont, QKeySequence
 from PySide2.QtCore import QUrl, Qt
-from PySide2.QtWidgets import QPlainTextEdit
+from PySide2.QtWidgets import QPlainTextEdit, QMessageBox
 
 from smartshelf.component.pythonhighlighter import PythonHighlighter
 
@@ -64,7 +64,9 @@ class CodePlainTextEdit(QPlainTextEdit):
         if path.lower().endswith(('.txt', '.py', '.mel', '.json')):
             self.setTextfile(path)
         else:
-            print "not an text file"
+            QMessageBox.warning(self, 'Wrong file format',
+                                "The selected file is not a text file",
+                                QMessageBox.StandardButton.Ok)
 
     def setTextfile(self, path):
         text = ''.join(open(path).readlines())
@@ -72,6 +74,9 @@ class CodePlainTextEdit(QPlainTextEdit):
 
     def setText(self, text):
         self.setPlainText(text)
+
+    def getText(self):
+        return self.toPlainText()
 
     # The following three methods set up dragging and dropping for the app
     def dragEnterEvent(self, event):
