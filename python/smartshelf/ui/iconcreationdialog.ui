@@ -140,13 +140,13 @@
                 </spacer>
                </item>
                <item>
-                <widget class="FlatButton" name="pushButton_8">
+                <widget class="FlatButton" name="browseFavouriteButton">
                  <property name="text">
                   <string/>
                  </property>
                  <property name="icon">
                   <iconset resource="../resource/resource.qrc">
-                   <normaloff>:/icon/changeCollection.png</normaloff>:/icon/changeCollection.png</iconset>
+                   <normaloff>:/icon/favoriteStar.png</normaloff>:/icon/favoriteStar.png</iconset>
                  </property>
                  <property name="iconSize">
                   <size>
@@ -334,21 +334,7 @@
          <enum>QPlainTextEdit::NoWrap</enum>
         </property>
         <property name="plainText">
-         <string>import sys
-
-sys.dont_write_bytecode = True
-path = 'D:/Documents/maya/2020/prefs/scripts/smartshelf/python'
-
-if path not in sys.path:
-	sys.path.append(path)
-
-
-
-import smartshelf.main
-reload(smartshelf.main)
-from smartshelf.main import run
-
-run( True, True, True)</string>
+         <string/>
         </property>
         <property name="tabStopWidth">
          <number>30</number>

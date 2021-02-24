@@ -8,7 +8,8 @@ from PySide2.QtWidgets import QDialog, QGraphicsScene, QListWidgetItem, QPushBut
 from PySide2.QtCore import Qt, QSize, QThread, Signal, QObject
 from PySide2.QtGui import QPixmap, QKeySequence
 
-import os, time
+import os
+import time
 import maya.cmds as cmds
 
 
@@ -144,6 +145,7 @@ class IconSearchDialog(QDialog):
         widget.setSize(curSize)
 
     def itemDoubleClicked(self, item):
+        print self.getSelectedIconPath()
         self.accept()
 
     def getSelectedIconPath(self):

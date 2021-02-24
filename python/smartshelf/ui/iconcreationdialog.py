@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'D:/Documents/maya/2020/prefs/scripts/smartshelf/python/smartshelf/ui/iconcreationdialog.ui'
+# Form implementation generated from reading ui file 'H:/sandbox/raphaelJ/smartshelf/python/smartshelf/ui/iconcreationdialog.ui'
 #
-# Created: Sun Feb 21 12:09:12 2021
+# Created: Tue Feb 23 17:00:08 2021
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -70,14 +70,14 @@ class Ui_iconCreationDialog(object):
         self.verticalLayout_5.addWidget(self.browseFolderButton)
         spacerItem = QtWidgets.QSpacerItem(20, 4, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_5.addItem(spacerItem)
-        self.pushButton_8 = FlatButton(self.iconPreviewWidget)
-        self.pushButton_8.setText("")
+        self.browseFavouriteButton = FlatButton(self.iconPreviewWidget)
+        self.browseFavouriteButton.setText("")
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/icon/changeCollection.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.pushButton_8.setIcon(icon1)
-        self.pushButton_8.setIconSize(QtCore.QSize(14, 16))
-        self.pushButton_8.setObjectName("pushButton_8")
-        self.verticalLayout_5.addWidget(self.pushButton_8)
+        icon1.addPixmap(QtGui.QPixmap(":/icon/favoriteStar.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.browseFavouriteButton.setIcon(icon1)
+        self.browseFavouriteButton.setIconSize(QtCore.QSize(14, 16))
+        self.browseFavouriteButton.setObjectName("browseFavouriteButton")
+        self.verticalLayout_5.addWidget(self.browseFavouriteButton)
         self.widget = QtWidgets.QWidget(self.iconPreviewWidget)
         self.widget.setObjectName("widget")
         self.verticalLayout_5.addWidget(self.widget)
@@ -162,6 +162,7 @@ class Ui_iconCreationDialog(object):
         font.setPointSize(9)
         self.codeTextEdit.setFont(font)
         self.codeTextEdit.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
+        self.codeTextEdit.setPlainText("")
         self.codeTextEdit.setTabStopWidth(30)
         self.codeTextEdit.setObjectName("codeTextEdit")
         self.verticalLayout_4.addWidget(self.codeTextEdit)
@@ -195,21 +196,6 @@ class Ui_iconCreationDialog(object):
         self.label_2.setText(QtWidgets.QApplication.translate("iconCreationDialog", "Command", None, -1))
         self.pythonButton.setText(QtWidgets.QApplication.translate("iconCreationDialog", "Python", None, -1))
         self.melButton.setText(QtWidgets.QApplication.translate("iconCreationDialog", "MEL", None, -1))
-        self.codeTextEdit.setPlainText(QtWidgets.QApplication.translate("iconCreationDialog", "import sys\n"
-"\n"
-"sys.dont_write_bytecode = True\n"
-"path = \'D:/Documents/maya/2020/prefs/scripts/smartshelf/python\'\n"
-"\n"
-"if path not in sys.path:\n"
-"    sys.path.append(path)\n"
-"\n"
-"\n"
-"\n"
-"import smartshelf.main\n"
-"reload(smartshelf.main)\n"
-"from smartshelf.main import run\n"
-"\n"
-"run( True, True, True)", None, -1))
         self.runButton.setText(QtWidgets.QApplication.translate("iconCreationDialog", "Run", None, -1))
         self.okButton.setText(QtWidgets.QApplication.translate("iconCreationDialog", "OK", None, -1))
         self.cancelButton.setText(QtWidgets.QApplication.translate("iconCreationDialog", "Cancel", None, -1))

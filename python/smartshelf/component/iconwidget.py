@@ -12,39 +12,53 @@ class IconWidget(QWidget):
         self.ui.setupUi(self)
 
         self.cmdObj = cmdObj
+        self.size = None
 
         self.setToolTip(self.cmdObj.getCommandName())
         self.defaultStyleSheet = self.styleSheet()
+
+    def updateCmdObj(self):
+        self.setToolTip(self.cmdObj.getCommandName())
+        self.setSize(self.size)
 
     def getCommandObject(self):
         return self.cmdObj
 
     def setSize(self, size):
-        pixmap = self.cmdObj.getIconPixmap().scaled(size, Qt.KeepAspectRatio,
+        self.size = size
+        pixmap = self.cmdObj.getIconPixmap().scaled(self.size, Qt.KeepAspectRatio,
                                                     Qt.SmoothTransformation)
 
-        self.ui.label.setPixmap(pixmap)
-        self.ui.label.resize(size)
+        child = self.layout().takeAt(0)
+        if child.widget():
+            child.widget().deleteLater()
+
+        imageLabel = QLabel()
+        self.layout().addWidget(imageLabel)
+
+        imageLabel.setPixmap(pixmap)
+        imageLabel.resize(self.size)
 
         if self.cmdObj.isVisibleName():
-            label = QLabel(self.ui.label)
-            label.setText(self.cmdObj.getCommandName())
 
-            labelSize = label.sizeHint()
-            parentSize = self.ui.label.size()
+            title = QLabel(imageLabel)
+            title.setText(self.cmdObj.getCommandName())
+
+            labelSize = title.sizeHint()
+            parentSize = imageLabel.size()
             moveX = 0
             moveY = 0
 
-            label.setStyleSheet("background-color:rgba(0,0,0,0.5);")
+            title.setStyleSheet("background-color:rgba(0,0,0,0.5);")
 
             if labelSize.width() < parentSize.width():
                 moveX = (parentSize.width() - labelSize.width()) / 2 - 4
-                label.setStyleSheet(
+                title.setStyleSheet(
                     "background-color:rgba(0,0,0,0.5); padding: 0 2px")
 
             moveY = parentSize.height() - labelSize.height()
 
-            label.move(moveX, moveY)
+            title.move(moveX, moveY)
 
     def mousePressEvent(self, event):
         self.setStyleSheet("background-color:transparent")

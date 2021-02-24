@@ -4,21 +4,25 @@ from smartshelf.component.commandobject import CommandObject
 
 import smartshelf.utils.file as fileUtils
 
-from PySide2.QtWidgets import QDialog, QGraphicsScene, QInputDialog, QMessageBox
+from PySide2.QtWidgets import QDialog, QGraphicsScene, QInputDialog, QMessageBox, QFileDialog
 from PySide2.QtCore import Qt, QSize
 from PySide2.QtGui import QPixmap, QKeySequence
 
 import maya.mel as mel
 
+import copy
+
 
 class IconCreationDialog(QDialog):
-    def __init__(self, reposPath, tabLabels, parent=None):
+    def __init__(self, reposPath, tabLabels, cmdObj, editing, parent=None):
         super(IconCreationDialog, self).__init__(parent=parent)
         self.ui = Ui_iconCreationDialog()
         self.ui.setupUi(self)
 
         self.ui.browseFolderButton.buttonPressed.connect(
             self.browseFolderPressed)
+        self.ui.browseFavouriteButton.buttonPressed.connect(
+            self.browseFavouritePressed)
         self.ui.melButton.pressed.connect(self.melPressed)
         self.ui.pythonButton.pressed.connect(self.pythonPressed)
         self.ui.runButton.pressed.connect(self.runPressed)
@@ -26,11 +30,27 @@ class IconCreationDialog(QDialog):
 
         self.ui.containingTabComboBox.addItems(tabLabels)
         self.show()
+        self.isEditing = editing
         self.iconPath = None
-        self.cmdObj = None
         self.reposPath = reposPath
+        self.cmdObj = cmdObj
+        self.oldCmdObj = copy.deepcopy(cmdObj)
 
-        self.ui.iconThumbnail.setIcon(QPixmap(":/icon/mayaLogo.png"))
+        if cmdObj.getIconPixmap():
+            self.setIconPixmap(cmdObj.getIconPixmap())
+        else:
+            self.setIconPixmap(QPixmap(":/icon/mayaLogo.png"))
+
+        if cmdObj.getCommandName():
+            self.setCommandName(cmdObj.getCommandName())
+            self.setCommandNameVisible(cmdObj.isVisibleName())
+
+        if cmdObj.getContainingTab():
+            self.setTabName(cmdObj.getContainingTab())
+
+        if cmdObj.getCommand():
+            self.setCodeText(cmdObj.getCommand())
+            self.isPythonCode(cmdObj.isPython())
 
     def checkName(self, name):
         def isAscii(text):
@@ -53,9 +73,9 @@ class IconCreationDialog(QDialog):
                                 QMessageBox.StandardButton.Ok)
             return False
 
-        if name[0].isdigit():
+        if not name[0].isalpha():
             QMessageBox.warning(self, 'Wrong name format',
-                                'The name cannot start with a number',
+                                'The name must start with a letter',
                                 QMessageBox.StandardButton.Ok)
             False
 
@@ -91,14 +111,20 @@ class IconCreationDialog(QDialog):
             comboBox.addItem(text)
             comboBox.setCurrentText(text)
 
+    def setIconPixmap(self, pixmap):
+        self.ui.iconThumbnail.setIcon(pixmap)
+
+    def setCommandName(self, name):
+        self.ui.nameEdit.setText(name)
+
+    def setCommandNameVisible(self, state):
+        self.ui.visibleCheckBox.setChecked(state)
+
     def setTabName(self, tabName):
         self.ui.containingTabComboBox.setCurrentText(tabName)
 
     def setCodeText(self, text):
         self.ui.codeTextEdit.setText(text)
-
-    def setCodePath(self, filepath):
-        self.ui.codeTextEdit.setTextfile(filepath)
 
     def runPressed(self):
         text = self.ui.codeTextEdit.toPlainText()
@@ -109,17 +135,36 @@ class IconCreationDialog(QDialog):
             else:
                 mel.eval(text)
 
+    def isPythonCode(self, state):
+        if state:
+            self.ui.pythonButton.setChecked(True)
+            self.ui.melButton.setChecked(False)
+            self.ui.codeTextEdit.setPythonCode()
+        else:
+            self.ui.pythonButton.setChecked(False)
+            self.ui.melButton.setChecked(True)
+            self.ui.codeTextEdit.setMelCode()
+
     def pythonPressed(self):
-        self.ui.codeTextEdit.setPythonCode()
+        self.isPythonCode(True)
 
     def melPressed(self):
-        self.ui.codeTextEdit.setMelCode()
+        self.isPythonCode(False)
 
     def browseFolderPressed(self):
+        path = QFileDialog.getOpenFileName(
+            self, "Select an image", "", "Image files (*.jpg *.gif *.png *.svg)")
+        if not path:
+            return
+        else:
+            self.iconPath = path[0]
+            self.ui.iconThumbnail.setIcon(QPixmap(self.iconPath))
+
+    def browseFavouritePressed(self):
         iconSearchDialog = IconSearchDialog(self)
         if iconSearchDialog.exec_():
             self.iconPath = iconSearchDialog.getSelectedIconPath()
-        self.ui.iconThumbnail.setIcon(QPixmap(self.iconPath))
+            self.ui.iconThumbnail.setIcon(QPixmap(self.iconPath))
 
     def keyPressEvent(self, event):
         if ((event.modifiers() and Qt.ControlModifier) and
@@ -137,7 +182,7 @@ class IconCreationDialog(QDialog):
         folderPath = self.reposPath + "/" + currentTab
         iconPath = folderPath + "/" + nameText + ".png"
 
-        if fileUtils.existingPath(iconPath):
+        if ((not self.isEditing) and fileUtils.existingPath(folderPath) and fileUtils.existingPath(iconPath)) or (self.isEditing and (currentTab != self.oldCmdObj.getContainingTab() or nameText != self.oldCmdObj.getCommandName()) and fileUtils.existingPath(folderPath) and fileUtils.existingPath(iconPath)):
             QMessageBox.warning(
                 self, 'Existing name', 'A script named ' + nameText +
                 " already exists in tab " + currentTab,
@@ -148,9 +193,9 @@ class IconCreationDialog(QDialog):
         iconPixmap = iconPixmap.scaled(QSize(64, 64), Qt.KeepAspectRatio,
                                        Qt.SmoothTransformation)
 
-        self.cmdObj = CommandObject()
         self.cmdObj.setFolderPath(folderPath)
         self.cmdObj.setIconPixmap(iconPixmap)
+        self.cmdObj.setContainingTab(currentTab)
         self.cmdObj.setCommandName(nameText)
         self.cmdObj.setIsVisibleName(self.ui.visibleCheckBox.isChecked())
         self.cmdObj.setCommand(self.ui.codeTextEdit.getText(),

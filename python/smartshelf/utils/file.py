@@ -249,7 +249,7 @@ def removeFolder(folderPath):
         shutil.rmtree(folderPath)
 
 
-def removeMayaFiles(filePaths):
+def removeCodeFiles(filePaths):
     for path in filePaths:
         if os.path.exists(path):
             os.remove(path)
