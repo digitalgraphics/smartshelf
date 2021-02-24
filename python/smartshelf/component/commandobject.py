@@ -10,16 +10,16 @@ class CommandObject:
         self.command = None
         self.isPythonCode = True
         self.containingTab = None
+        self.isLockedCode = False
 
     def readData(self, cmdObj):
-        print cmdObj.getCommandName()
         self.setContainingTab(cmdObj.getContainingTab())
         self.setFolderPath(cmdObj.getFolderPath())
         self.setIconPixmap(QPixmap(cmdObj.getIconPixmap()))
         self.setCommandName(str(cmdObj.getCommandName()))
         self.setIsVisibleName(cmdObj.isVisibleName())
         self.setCommand(cmdObj.getCommand(), cmdObj.isPython())
-        print self.getCommandName()
+        self.setIsLocked(cmdObj.isLocked())
 
     def setContainingTab(self, tabName):
         self.containingTab = tabName
@@ -60,3 +60,9 @@ class CommandObject:
 
     def isPython(self):
         return self.isPythonCode
+
+    def setIsLocked(self, state):
+        self.isLockedCode = state
+
+    def isLocked(self):
+        return self.isLockedCode

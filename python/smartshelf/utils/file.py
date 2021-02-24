@@ -177,7 +177,7 @@ def getFolders(path):
 
     for filename in os.listdir(path):
         curPath = os.path.join(path, filename)
-        if os.path.isdir(path):
+        if os.path.isdir(curPath):
             dirs.append(curPath)
 
     return dirs
@@ -292,8 +292,10 @@ def getCodeFilesFromFolder(folderPath, filterKeyword=False, recursive=False):
 
 
 def writeJsonFile(data, filePath):
-    with open(filePath, 'w') as outfile:
-        json.dump(data, outfile)
+    j = json.dumps(data, indent=3)
+    f = open(filePath, 'w')
+    print >> f, j
+    f.close()
 
 
 def readJsonFile(filePath):

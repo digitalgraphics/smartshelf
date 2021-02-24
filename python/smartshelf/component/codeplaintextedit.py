@@ -70,7 +70,7 @@ class CodePlainTextEdit(QPlainTextEdit):
 
     def setTextfile(self, path):
         text = ''.join(open(path).readlines())
-        self.setText(text)
+        self.setTextCode(text)
 
     def setText(self, text):
         self.setPlainText(text)
@@ -100,7 +100,11 @@ class CodePlainTextEdit(QPlainTextEdit):
                 self.setTextfilePath(urls[0].toLocalFile())
 
         elif event.mimeData().hasText():
-            self.setText(event.mimeData().text())
+            self.setTextCode(event.mimeData().text())
 
         else:
             event.ignore()
+
+    def setTextCode(self, text):
+        if not self.isReadOnly:
+            self.setText(text)

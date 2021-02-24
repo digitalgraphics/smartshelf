@@ -3,8 +3,8 @@ from smartshelf.view.iconcreationdialog import IconCreationDialog
 from smartshelf.component.iconlistwidget import IconListWidget
 from smartshelf.component.commandobject import CommandObject
 
-from PySide2.QtWidgets import QMainWindow, QWidget, QLabel, QListWidget
-from PySide2.QtCore import QSize, Qt
+from PySide2.QtWidgets import QMainWindow, QWidget, QLabel, QListWidget, QFrame, QApplication
+from PySide2.QtCore import QSize, Qt, QTimer
 from PySide2.QtGui import QIcon, QPixmap, QImage
 
 import smartshelf.utils.file as fileUtils
@@ -23,12 +23,17 @@ class MainWindow(QMainWindow):
         self.ui.addButton.buttonPressed.connect(self.addIconPressed)
         self.ui.settingsButton.buttonPressed.connect(self.settingsPressed)
 
-        self.sharedRepos = "H:/sandbox/raphaelJ/smartshelf_shared_repository"
+        self.sharedRepos = "D:/Documents/maya/2019/prefs/scripts/smartshelf_shared_repository"
+        # self.sharedRepos = "H:/sandbox/raphaelJ/smartshelf_shared_repository"
 
         self.localRepos = self.historyPath = [
             s for s in sys.path if 'prefs' in s
         ][0] + "/smartshelfRepository"
-        self.smartshelfHistory = dict()
+
+        self.sharedReposSettings = self.sharedRepos + "/smartshelf_settings.json"
+        self.localReposSettings = self.localRepos + "/smartshelf_settings.json"
+
+        self.smartshelfSettings = dict()
         self.curIconSize = QSize(32, 32)
 
         self.initCommands()
@@ -36,10 +41,11 @@ class MainWindow(QMainWindow):
     def initCommands(self):
         self.loadSharedRepos()
         self.loadLocalRepos()
-        self.currentList().appendSeparator()
+        self.saveSmartshelfSettings()
 
     def loadSharedRepos(self):
-        self.loadRepos(self.sharedRepos)
+        self.loadRepos(self.sharedRepos, locked=True)
+        self.loadSettings(self.sharedReposSettings)
 
     def loadLocalRepos(self):
         if not fileUtils.existingPath(self.localRepos):
@@ -47,8 +53,37 @@ class MainWindow(QMainWindow):
             return
 
         self.loadRepos(self.localRepos)
+        self.loadSettings(self.localReposSettings)
 
-    def loadRepos(self, reposPath):
+    def loadSettings(self, settingsPath):
+        self.smartshelfSettings = fileUtils.readJsonFile(settingsPath)
+
+        if not self.smartshelfSettings:
+            return
+
+        for key in self.smartshelfSettings["tabs"]:
+            jsonIconList = self.smartshelfSettings["tabs"][key]
+            iconList = self.getListByTabName(key)
+
+            if iconList:
+                iconList.removeAllSeparators()
+
+                for i in range(len(jsonIconList)):
+                    jsonIcon = jsonIconList[i]
+                    if jsonIcon["isSeparator"]:
+                        iconList.addSeparator(i)
+                    else:
+                        item = iconList.getItemByName(jsonIcon["name"])
+                        if item:
+                            widget = iconList.itemWidget(item)
+                            cmdObj = widget.getCommandObject()
+                            cmdObj.setIsVisibleName(jsonIcon["isNameVisible"])
+
+                            widget.updateCmdObj()
+
+                            iconList.moveItemToIndex(item, i)
+
+    def loadRepos(self, reposPath, locked=False):
         if not fileUtils.existingPath(reposPath):
             return
 
@@ -60,25 +95,23 @@ class MainWindow(QMainWindow):
             if not self.getListByTabName(tabName):
                 self.createTab(tabName)
 
-            self.smartshelfHistory[tabName] = dict()
-
             for codePath in fileUtils.getCodeFilesFromFolder(tabPath):
-                for i in range(5):
-                    iconPath = fileUtils.getCodeThumbnail(codePath)
-                    commandName = fileUtils.getFileBaseName(codePath,
-                                                            withExtension=False)
-                    commandText = fileUtils.readTextFile(codePath)
-                    isPythonCode = codePath.endswith(".py")
+                iconPath = fileUtils.getCodeThumbnail(codePath)
+                commandName = fileUtils.getFileBaseName(codePath,
+                                                        withExtension=False)
+                commandText = fileUtils.readTextFile(codePath)
+                isPythonCode = codePath.endswith(".py")
 
-                    cmdObj = CommandObject()
-                    cmdObj.setFolderPath(tabPath)
-                    cmdObj.setIconPixmap(QPixmap(iconPath))
-                    cmdObj.setCommandName(commandName + str(i))
-                    cmdObj.setIsVisibleName(True)
-                    cmdObj.setContainingTab(tabName)
-                    cmdObj.setCommand(commandText, isPythonCode)
+                cmdObj = CommandObject()
+                cmdObj.setFolderPath(tabPath)
+                cmdObj.setIconPixmap(QPixmap(iconPath))
+                cmdObj.setCommandName(commandName)
+                cmdObj.setIsVisibleName(True)
+                cmdObj.setContainingTab(tabName)
+                cmdObj.setCommand(commandText, isPythonCode)
+                cmdObj.setIsLocked(locked)
 
-                    self.addCommandObjToTab(cmdObj, tabName)
+                self.addCommandObjToTab(cmdObj, tabName)
 
     def createTab(self, tabName):
         folderPath = self.localRepos + "/" + tabName
@@ -94,15 +127,51 @@ class MainWindow(QMainWindow):
         iconListWidget.textDropped.connect(self.textDropped)
         iconListWidget.commandRemoved.connect(self.commandRemoved)
         iconListWidget.commandEdited.connect(self.commandEdited)
+        iconListWidget.commandMoved.connect(self.commandMoved)
         iconListWidget.itemClicked.connect(self.commandClicked)
 
         return self.ui.tabWidget.addTab(iconListWidget, tabName)
 
+    def saveSmartshelfSettings(self):
+        tabWidget = self.ui.tabWidget
+
+        self.smartshelfSettings["tabs"] = dict()
+
+        for i in range(tabWidget.count()):
+            iconList = tabWidget.widget(i)
+
+            curIcons = []
+
+            for j in range(iconList.count()):
+                item = iconList.item(j)
+                widget = iconList.itemWidget(item)
+
+                if isinstance(widget, QFrame):
+                    curIcons.append({"name": "separator", "isSeparator": True})
+                else:
+                    cmdObj = widget.getCommandObject()
+                    curIcons.append({
+                        "name": cmdObj.getCommandName(),
+                        "isNameVisible": cmdObj.isVisibleName(),
+                        "isSeparator": False
+                    })
+
+            tabName = self.getTabNameList(iconList)
+            self.smartshelfSettings["tabs"][tabName] = curIcons
+
+        fileUtils.writeJsonFile(self.smartshelfSettings,
+                                self.localReposSettings)
+
+    def commandMoved(self):
+        QTimer.singleShot(100, self.saveSmartshelfSettings)
+
     def commandClicked(self, item):
         iconList = item.listWidget()
         widget = iconList.itemWidget(item)
-        cmdObj = widget.getCommandObject()
-        self.runCommand(cmdObj)
+
+        if not isinstance(widget, QFrame):
+            cmdObj = widget.getCommandObject()
+            self.runCommand(cmdObj)
 
     def runCommand(self, cmdObj):
         text = cmdObj.getCommand()
@@ -117,6 +186,8 @@ class MainWindow(QMainWindow):
         cmdObj = objList[0]
         self.removeIconFromFile(cmdObj)
         self.removeIconFromList(cmdObj)
+
+        self.saveSmartshelfSettings()
 
     def commandEdited(self, objList):
         cmdObj = objList[0]
@@ -168,18 +239,14 @@ class MainWindow(QMainWindow):
 
     def createIcon(self, cmdObj=None, editing=False):
         tabWidget = self.ui.tabWidget
-        tabLabels = []
         oldCmdObj = copy.deepcopy(cmdObj)
-
-        for i in range(tabWidget.count()):
-            tabLabels.append(tabWidget.tabText(i))
 
         if not cmdObj:
             cmdObj = CommandObject()
 
         # open the dialog to create/modify an icon
-        iconCreationDialog = IconCreationDialog(self.localRepos, tabLabels, cmdObj,  editing,
-                                                self)
+        iconCreationDialog = IconCreationDialog(self.localRepos, tabWidget,
+                                                cmdObj, editing, self)
 
         iconCreationDialog.show()
 
@@ -193,12 +260,10 @@ class MainWindow(QMainWindow):
                 self.addCommandObjToTab(cmdObj, tabName)
             # editing with other directory
             elif oldCmdObj.getFolderPath() != cmdObj.getFolderPath():
-                self.moveCmdObj(oldCmdObj,
-                                cmdObj)
+                self.moveCmdObj(oldCmdObj, cmdObj)
             # editing with other name
             else:
-                self.updateCmdObj(oldCmdObj,
-                                  cmdObj)
+                self.updateCmdObj(oldCmdObj, cmdObj)
 
             fileUtils.saveImage(cmdObj.getIconPixmap(),
                                 cmdObj.getCommandName(),
@@ -206,6 +271,8 @@ class MainWindow(QMainWindow):
 
             fileUtils.saveCode(cmdObj.getCommand(), cmdObj.getCommandName(),
                                cmdObj.getFolderPath(), cmdObj.isPython())
+
+            self.saveSmartshelfSettings()
 
         iconCreationDialog.accepted.connect(lambda: commandObjCreated())
 
@@ -217,6 +284,10 @@ class MainWindow(QMainWindow):
                 return tabWidget.widget(i)
 
         return None
+
+    def getTabNameList(self, list):
+        tabWidget = self.ui.tabWidget
+        return tabWidget.tabText(tabWidget.indexOf(list))
 
     def addCommandObjToTab(self, cmdObj, tabName):
         iconListWidget = self.getListByTabName(tabName)

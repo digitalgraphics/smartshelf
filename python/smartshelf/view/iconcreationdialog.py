@@ -14,8 +14,9 @@ import copy
 
 
 class IconCreationDialog(QDialog):
-    def __init__(self, reposPath, tabLabels, cmdObj, editing, parent=None):
+    def __init__(self, reposPath, tabWidget, cmdObj, editing, parent=None):
         super(IconCreationDialog, self).__init__(parent=parent)
+
         self.ui = Ui_iconCreationDialog()
         self.ui.setupUi(self)
 
@@ -28,7 +29,9 @@ class IconCreationDialog(QDialog):
         self.ui.runButton.pressed.connect(self.runPressed)
         self.ui.addTabButton.buttonPressed.connect(self.addTabPressed)
 
-        self.ui.containingTabComboBox.addItems(tabLabels)
+        for i in range(tabWidget.count()):
+            self.ui.containingTabComboBox.addItem(tabWidget.tabText(i))
+
         self.show()
         self.isEditing = editing
         self.iconPath = None
@@ -49,8 +52,19 @@ class IconCreationDialog(QDialog):
             self.setTabName(cmdObj.getContainingTab())
 
         if cmdObj.getCommand():
-            self.setCodeText(cmdObj.getCommand())
+            self.setCodeText(cmdObj.getCommand(), force=True)
             self.isPythonCode(cmdObj.isPython())
+
+        if cmdObj.isLocked():
+            self.ui.codeTextEdit.setReadOnly(True)
+            self.ui.browseFolderButton.setEnabled(False)
+            self.ui.browseFavouriteButton.setEnabled(False)
+            self.ui.nameEdit.setEnabled(False)
+            self.ui.iconThumbnail.setEnabled(False)
+            self.ui.containingTabComboBox.setEnabled(False)
+            self.ui.addTabButton.setEnabled(False)
+            self.ui.pythonButton.setEnabled(False)
+            self.ui.melButton.setEnabled(False)
 
     def checkName(self, name):
         def isAscii(text):
@@ -123,8 +137,9 @@ class IconCreationDialog(QDialog):
     def setTabName(self, tabName):
         self.ui.containingTabComboBox.setCurrentText(tabName)
 
-    def setCodeText(self, text):
-        self.ui.codeTextEdit.setText(text)
+    def setCodeText(self, text, force=False):
+        if not self.cmdObj.isLocked() or force:
+            self.ui.codeTextEdit.setText(text)
 
     def runPressed(self):
         text = self.ui.codeTextEdit.toPlainText()
@@ -153,7 +168,8 @@ class IconCreationDialog(QDialog):
 
     def browseFolderPressed(self):
         path = QFileDialog.getOpenFileName(
-            self, "Select an image", "", "Image files (*.jpg *.gif *.png *.svg)")
+            self, "Select an image", "",
+            "Image files (*.jpg *.gif *.png *.svg)")
         if not path:
             return
         else:
@@ -174,6 +190,7 @@ class IconCreationDialog(QDialog):
 
     def accept(self):
         currentTab = self.ui.containingTabComboBox.currentText()
+        currentList = self.parent().getListByTabName(currentTab)
         nameText = self.ui.nameEdit.text()
 
         if not self.checkName(nameText):
@@ -182,7 +199,12 @@ class IconCreationDialog(QDialog):
         folderPath = self.reposPath + "/" + currentTab
         iconPath = folderPath + "/" + nameText + ".png"
 
-        if ((not self.isEditing) and fileUtils.existingPath(folderPath) and fileUtils.existingPath(iconPath)) or (self.isEditing and (currentTab != self.oldCmdObj.getContainingTab() or nameText != self.oldCmdObj.getCommandName()) and fileUtils.existingPath(folderPath) and fileUtils.existingPath(iconPath)):
+        if ((not self.isEditing) and currentList
+                and currentList.getItemByName(nameText)) or (
+                    self.isEditing and
+                    (currentTab != self.oldCmdObj.getContainingTab()
+                     or nameText != self.oldCmdObj.getCommandName())
+                    and currentList and currentList.getItemByName(nameText)):
             QMessageBox.warning(
                 self, 'Existing name', 'A script named ' + nameText +
                 " already exists in tab " + currentTab,
