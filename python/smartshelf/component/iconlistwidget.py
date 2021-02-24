@@ -75,6 +75,7 @@ class IconListWidget(QListWidget):
             super(IconListWidget, self).contextMenuEvent(event)
             return
 
+    def contextMenuIcon(self, pos):
         iconWidget = self.itemWidget(item)
         cmdObj = iconWidget.getCommandObject()
 
@@ -98,10 +99,6 @@ class IconListWidget(QListWidget):
         if action == removeAction:
             self.takeItem(self.row(item))
             self.commandRemoved.emit([cmdObj])
-
-    # def mousePressEvent(self, event):
-    #     if event.button() == Qt.RightButton:
-    #         pass
 
     def addIcon(self, cmdObj, pos):
         widget = IconWidget(cmdObj)
