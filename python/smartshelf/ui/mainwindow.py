@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:/Documents/maya/2020/prefs/scripts/smartshelf/python/smartshelf/ui/mainwindow.ui'
 #
-# Created: Wed Feb 24 18:41:23 2021
+# Created: Thu Feb 25 14:54:51 2021
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!

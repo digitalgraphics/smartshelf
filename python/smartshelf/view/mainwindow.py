@@ -1,5 +1,6 @@
 from smartshelf.ui.mainwindow import Ui_mainWindow
 from smartshelf.view.iconcreationdialog import IconCreationDialog
+from smartshelf.view.settingsdialog import SettingsDialog
 from smartshelf.component.iconlistwidget import IconListWidget
 from smartshelf.component.commandobject import CommandObject
 
@@ -22,6 +23,7 @@ class MainWindow(QMainWindow):
 
         self.ui.addButton.buttonPressed.connect(self.addIconPressed)
         self.ui.settingsButton.buttonPressed.connect(self.settingsPressed)
+        self.ui.tabWidget.tabBar().tabMoved.connect(self.tabMoved)
 
         self.sharedRepos = "D:/Documents/maya/2019/prefs/scripts/smartshelf_shared_repository"
         # self.sharedRepos = "H:/sandbox/raphaelJ/smartshelf_shared_repository"
@@ -33,14 +35,27 @@ class MainWindow(QMainWindow):
         self.sharedReposSettings = self.sharedRepos + "/smartshelf_settings.json"
         self.localReposSettings = self.localRepos + "/smartshelf_settings.json"
 
+        self.showSharedRepos = True
+        self.showLocalRepos = True
+
         self.smartshelfSettings = dict()
+        self.smartshelfSettings["tabs"] = dict()
+
         self.curIconSize = QSize(32, 32)
 
         self.initCommands()
 
     def initCommands(self):
-        self.loadSharedRepos()
-        self.loadLocalRepos()
+        if not fileUtils.existingPath(self.localRepos):
+            fileUtils.createFolder(self.localRepos)
+
+        if self.showSharedRepos:
+            self.loadSharedRepos()
+
+        if self.showLocalRepos:
+            self.loadLocalRepos()
+
+        self.orderTabsFromSettings()
         self.saveSmartshelfSettings()
 
     def loadSharedRepos(self):
@@ -48,21 +63,40 @@ class MainWindow(QMainWindow):
         self.loadSettings(self.sharedReposSettings)
 
     def loadLocalRepos(self):
-        if not fileUtils.existingPath(self.localRepos):
-            fileUtils.createFolder(self.localRepos)
-            return
-
         self.loadRepos(self.localRepos)
         self.loadSettings(self.localReposSettings)
 
-    def loadSettings(self, settingsPath):
-        self.smartshelfSettings = fileUtils.readJsonFile(settingsPath)
+    def orderTabsFromSettings(self):
+        tabNames = self.smartshelfSettings["tabs"].keys()
+        tabNames.sort(
+            key=lambda x: self.smartshelfSettings["tabs"][x]["order"])
 
-        if not self.smartshelfSettings:
+        for i in range(len(tabNames)):
+            tabName = tabNames[i]
+            srcIndex = self.getTabIndexByName(tabName)
+
+            if srcIndex >= 0:
+                self.ui.tabWidget.tabBar().moveTab(srcIndex, i)
+
+        self.ui.tabWidget.setCurrentIndex(0)
+
+    def loadSettings(self, settingsPath):
+        jsonData = fileUtils.readJsonFile(settingsPath)
+
+        if not jsonData:
             return
 
-        for key in self.smartshelfSettings["tabs"]:
-            jsonIconList = self.smartshelfSettings["tabs"][key]
+        oldJsonData = self.smartshelfSettings
+        self.smartshelfSettings = jsonData
+        tabNames = self.smartshelfSettings["tabs"].keys()
+
+        for key in tabNames:
+
+            if key in oldJsonData["tabs"]:
+                self.smartshelfSettings["tabs"][key]["isLocked"] = oldJsonData[
+                    "tabs"][key]["isLocked"]
+
+            jsonIconList = self.smartshelfSettings["tabs"][key]["icons"]
             iconList = self.getListByTabName(key)
 
             if iconList:
@@ -113,6 +147,9 @@ class MainWindow(QMainWindow):
 
                 self.addCommandObjToTab(cmdObj, tabName)
 
+    def tabMoved(self, fromIndex, toIndex):
+        self.saveSmartshelfSettings()
+
     def createTab(self, tabName):
         folderPath = self.localRepos + "/" + tabName
 
@@ -122,6 +159,9 @@ class MainWindow(QMainWindow):
         iconListWidget = IconListWidget()
 
         iconListWidget.setIconSize(self.curIconSize)
+
+        size = self.curIconSize.width()
+        iconListWidget.setMinimumSize(QSize(size + 4, size + 4))
 
         iconListWidget.fileDropped.connect(self.fileDropped)
         iconListWidget.textDropped.connect(self.textDropped)
@@ -133,31 +173,45 @@ class MainWindow(QMainWindow):
         return self.ui.tabWidget.addTab(iconListWidget, tabName)
 
     def saveSmartshelfSettings(self):
+
+        if not self.showLocalRepos:
+            return
+
         tabWidget = self.ui.tabWidget
 
+        oldTabData = self.smartshelfSettings["tabs"]
         self.smartshelfSettings["tabs"] = dict()
 
         for i in range(tabWidget.count()):
             iconList = tabWidget.widget(i)
+            tabName = self.getTabNameList(iconList)
 
-            curIcons = []
+            curDict = {"isLocked": False, "icons": [], "order": i}
+
+            if tabName in oldTabData and oldTabData[tabName]["isLocked"]:
+                curDict["isLocked"] = True
 
             for j in range(iconList.count()):
                 item = iconList.item(j)
                 widget = iconList.itemWidget(item)
 
                 if isinstance(widget, QFrame):
-                    curIcons.append({"name": "separator", "isSeparator": True})
+                    curDict["icons"].append({
+                        "name": "separator",
+                        "isSeparator": True
+                    })
                 else:
                     cmdObj = widget.getCommandObject()
-                    curIcons.append({
-                        "name": cmdObj.getCommandName(),
-                        "isNameVisible": cmdObj.isVisibleName(),
-                        "isSeparator": False
+                    curDict["icons"].append({
+                        "name":
+                        cmdObj.getCommandName(),
+                        "isNameVisible":
+                        cmdObj.isVisibleName(),
+                        "isSeparator":
+                        False
                     })
 
-            tabName = self.getTabNameList(iconList)
-            self.smartshelfSettings["tabs"][tabName] = curIcons
+            self.smartshelfSettings["tabs"][tabName] = curDict
 
         fileUtils.writeJsonFile(self.smartshelfSettings,
                                 self.localReposSettings)
@@ -289,6 +343,15 @@ class MainWindow(QMainWindow):
         tabWidget = self.ui.tabWidget
         return tabWidget.tabText(tabWidget.indexOf(list))
 
+    def getTabIndexByName(self, tabName):
+        tabWidget = self.ui.tabWidget
+
+        for i in range(tabWidget.count()):
+            if tabWidget.tabText(i) == tabName:
+                return i
+
+        return -1
+
     def addCommandObjToTab(self, cmdObj, tabName):
         iconListWidget = self.getListByTabName(tabName)
 
@@ -299,7 +362,103 @@ class MainWindow(QMainWindow):
         iconListWidget.appendIcon(cmdObj)
 
     def settingsPressed(self):
-        pass
+        settingsDialog = SettingsDialog(self)
+        tabWidget = self.ui.tabWidget
+
+        for i in range(tabWidget.count()):
+            tabName = tabWidget.tabText(i)
+            isLocked = self.smartshelfSettings["tabs"][tabName]["isLocked"]
+            settingsDialog.appendTab(tabName, isLocked)
+
+        settingsDialog.setIconSize(self.curIconSize.width())
+        settingsDialog.setUserSettingsPath(self.localRepos)
+
+        if self.showLocalRepos and self.showSharedRepos:
+            settingsDialog.setCmdsVisibility(settingsDialog.AllCmds)
+        elif self.showSharedRepos:
+            settingsDialog.setCmdsVisibility(settingsDialog.SharedCmds)
+        elif self.showLocalRepos:
+            settingsDialog.setCmdsVisibility(settingsDialog.PrivateCmds)
+
+        if settingsDialog.exec_():
+            tabs = settingsDialog.getTabs()
+            oldTabs = settingsDialog.getTabOldNames()
+
+            # remove tabs that where removed in settings
+            for i in reversed(range(tabWidget.count())):
+                tabName = tabWidget.tabText(i)
+                if tabName not in oldTabs:
+                    self.removeTab(tabName)
+
+            # move the tab at their position
+            for i in range(len(oldTabs)):
+                tabName = oldTabs[i]
+                srcIndex = self.getTabIndexByName(tabName)
+
+                if srcIndex < 0:
+                    self.createTab(tabName)
+                    srcIndex = self.getTabIndexByName(tabName)
+
+                tabWidget.tabBar().moveTab(srcIndex, i)
+
+            # rename tab
+            for i in range(len(oldTabs)):
+                oldName = oldTabs[i]
+                newName = tabs[i]
+
+                if oldName != newName:
+                    # rename the label tab in tabwidget
+                    self.ui.tabWidget.setTabText(
+                        self.getTabIndexByName(oldName), newName)
+
+                    # rename tab for icon in tabwidget
+                    iconList = self.getListByTabName(newName)
+                    iconList.setListTabName(newName)
+
+                    # rename tab in the setting json
+                    self.smartshelfSettings["tabs"][
+                        newName] = self.smartshelfSettings["tabs"][oldName]
+
+                    # rename the tab from folders
+                    fileUtils.renameFolder(self.localRepos, oldName, newName)
+
+            needReload = False
+
+            newIconSize = settingsDialog.getIconSize()
+            if self.curIconSize.width() != newIconSize:
+                self.curIconSize = QSize(newIconSize, newIconSize)
+                needReload = True
+
+            newLocalVisible = settingsDialog.isLocalVisible()
+            if self.showLocalRepos != newLocalVisible:
+                self.showLocalRepos = newLocalVisible
+                needReload = True
+
+            newSharedVisible = settingsDialog.isSharedVisible()
+            if self.showSharedRepos != newSharedVisible:
+                self.showSharedRepos = newSharedVisible
+                needReload = True
+
+            self.saveSmartshelfSettings()
+
+            if settingsDialog.getClearType(
+            ) == settingsDialog.ClearOrganisation:
+                fileUtils.removeFile(self.localReposSettings)
+                needReload = True
+
+            if settingsDialog.getClearType() == settingsDialog.ClearAll:
+                fileUtils.removeFolder(self.localRepos)
+                needReload = True
+
+            if needReload:
+                self.ui.tabWidget.clear()
+                self.initCommands()
+
+    def removeTab(self, tabName):
+        tabIndex = self.getTabIndexByName(tabName)
+        self.ui.tabWidget.removeTab(tabIndex)
+        folderPath = self.localRepos + "/" + tabName
+        fileUtils.removeFolder(folderPath)
 
     def addIconPressed(self):
         cmdObj = CommandObject()
@@ -311,21 +470,3 @@ class MainWindow(QMainWindow):
 
     def currentList(self):
         return self.ui.tabWidget.currentWidget()
-
-    def setIconSize(self, size):
-        return
-
-        # tabWidget = self.ui.tabWidget
-
-        # for i in range(tabWidget.count()):
-        #     iconListWidget = tabWidget.widget(i)
-
-        #     iconListWidget.hide()
-        #     iconListWidget.clear()
-
-        #     iconListWidget.setIconSize(size)
-
-        #     for i in range(100):
-        #         iconListWidget.addIcon(str(i), QPixmap("C:/Desktop/icon.png"))
-
-        #     iconListWidget.show()

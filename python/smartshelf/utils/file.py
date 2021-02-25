@@ -172,15 +172,26 @@ def createFolder(folderPath):
 
 
 def getFolders(path):
-
     dirs = []
+
+    if not existingPath(path):
+        return dirs
 
     for filename in os.listdir(path):
         curPath = os.path.join(path, filename)
         if os.path.isdir(curPath):
-            dirs.append(curPath)
+            dirs.append(curPath.replace("\\", "/"))
 
     return dirs
+
+
+def renameFolder(path, oldName, newName):
+    os.rename(os.path.join(path, oldName), os.path.join(path, newName))
+
+
+def removeFile(path):
+    if existingPath(path):
+        os.remove(path)
 
 
 """

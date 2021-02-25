@@ -196,8 +196,13 @@ class IconCreationDialog(QDialog):
         if not self.checkName(nameText):
             return
 
+        if not currentTab:
+            QMessageBox.warning(self, 'No tab selected',
+                                "Please select a destination tab",
+                                QMessageBox.StandardButton.Ok)
+            return
+
         folderPath = self.reposPath + "/" + currentTab
-        iconPath = folderPath + "/" + nameText + ".png"
 
         if ((not self.isEditing) and currentList
                 and currentList.getItemByName(nameText)) or (

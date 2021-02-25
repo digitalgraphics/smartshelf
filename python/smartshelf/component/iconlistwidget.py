@@ -58,7 +58,6 @@ class IconListWidget(QListWidget):
         self.setDragEnabled(True)
         self.setEditTriggers(self.NoEditTriggers)
         self.setAcceptDrops(True)
-        self.setMinimumSize(QSize(40, 40))
 
         self.isDropping = False
         self.droppedElem = None
@@ -192,6 +191,14 @@ class IconListWidget(QListWidget):
         curSize = self.iconSize()
         item.setSizeHint(curSize)
         widget.setSize(curSize)
+
+    def setListTabName(self, tabName):
+        for i in range(self.count()):
+            item = self.item(i)
+            widget = self.itemWidget(item)
+            if not isinstance(widget, QFrame):
+                cmdObj = widget.getCommandObject()
+                cmdObj.setContainingTab(tabName)
 
     def addSeparator(self, pos):
         curSize = self.iconSize()
