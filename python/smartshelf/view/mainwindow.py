@@ -25,8 +25,7 @@ class MainWindow(QMainWindow):
         self.ui.settingsButton.buttonPressed.connect(self.settingsPressed)
         self.ui.tabWidget.tabBar().tabMoved.connect(self.tabMoved)
 
-        self.sharedRepos = "D:/Documents/maya/2019/prefs/scripts/smartshelf_shared_repository"
-        # self.sharedRepos = "H:/sandbox/raphaelJ/smartshelf_shared_repository"
+        self.sharedRepos = "H:/sandbox/raphaelJ/smartshelf_shared_repository"
 
         self.localRepos = self.historyPath = [
             s for s in sys.path if 'prefs' in s
@@ -40,6 +39,11 @@ class MainWindow(QMainWindow):
 
         self.smartshelfSettings = dict()
         self.smartshelfSettings["tabs"] = dict()
+        self.smartshelfSettings["settings"] = {
+            "iconSize": 32,
+            "isLocalReposVisible": True,
+            "isSharedReposVisible": True,
+        }
 
         self.curIconSize = QSize(32, 32)
 
@@ -48,6 +52,8 @@ class MainWindow(QMainWindow):
     def initCommands(self):
         if not fileUtils.existingPath(self.localRepos):
             fileUtils.createFolder(self.localRepos)
+        else:
+            self.loadUserSettings(self.localReposSettings)
 
         if self.showSharedRepos:
             self.loadSharedRepos()
@@ -57,6 +63,15 @@ class MainWindow(QMainWindow):
 
         self.orderTabsFromSettings()
         self.saveSmartshelfSettings()
+
+    def loadUserSettings(self, path):
+        jsonData = fileUtils.readJsonFile(path)
+
+        if jsonData and "settings" in jsonData:
+            iconSize = jsonData["settings"]["iconSize"]
+            self.curIconSize = QSize(iconSize, iconSize)
+            self.showLocalRepos = jsonData["settings"]["isLocalReposVisible"]
+            self.showSharedRepos = jsonData["settings"]["isSharedReposVisible"]
 
     def loadSharedRepos(self):
         self.loadRepos(self.sharedRepos, locked=True)
@@ -87,7 +102,7 @@ class MainWindow(QMainWindow):
             return
 
         oldJsonData = self.smartshelfSettings
-        self.smartshelfSettings = jsonData
+        self.smartshelfSettings["tabs"] = jsonData["tabs"]
         tabNames = self.smartshelfSettings["tabs"].keys()
 
         for key in tabNames:
@@ -232,7 +247,7 @@ class MainWindow(QMainWindow):
 
         if text:
             if cmdObj.isPython():
-                exec(text)
+                exec text in globals(), globals()
             else:
                 mel.eval(text)
 
@@ -427,16 +442,19 @@ class MainWindow(QMainWindow):
             newIconSize = settingsDialog.getIconSize()
             if self.curIconSize.width() != newIconSize:
                 self.curIconSize = QSize(newIconSize, newIconSize)
+                self.smartshelfSettings["settings"]["iconSize"] = newIconSize
                 needReload = True
 
             newLocalVisible = settingsDialog.isLocalVisible()
             if self.showLocalRepos != newLocalVisible:
                 self.showLocalRepos = newLocalVisible
+                self.smartshelfSettings["settings"]["isLocalReposVisible"] = newLocalVisible
                 needReload = True
 
             newSharedVisible = settingsDialog.isSharedVisible()
             if self.showSharedRepos != newSharedVisible:
                 self.showSharedRepos = newSharedVisible
+                self.smartshelfSettings["settings"]["isSharedReposVisible"] = newSharedVisible
                 needReload = True
 
             self.saveSmartshelfSettings()

@@ -91,7 +91,7 @@ class IconCreationDialog(QDialog):
             QMessageBox.warning(self, 'Wrong name format',
                                 'The name must start with a letter',
                                 QMessageBox.StandardButton.Ok)
-            False
+            return False
 
         return True
 
@@ -146,7 +146,7 @@ class IconCreationDialog(QDialog):
 
         if text:
             if self.ui.pythonButton.isChecked():
-                exec(text)
+                exec text in globals(), globals()
             else:
                 mel.eval(text)
 
