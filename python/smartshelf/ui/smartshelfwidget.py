@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'H:/sandbox/raphaelJ/smartshelf/python/smartshelf/ui/smartshelfwidget.ui'
+# Form implementation generated from reading ui file 'D:/Documents/maya/2020/prefs/scripts/smartshelf/python/smartshelf/ui/smartshelfwidget.ui'
 #
-# Created: Thu Feb 25 17:09:08 2021
+# Created: Fri Feb 26 10:34:42 2021
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!

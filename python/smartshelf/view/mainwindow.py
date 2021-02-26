@@ -13,6 +13,7 @@ import maya.mel as mel
 
 import sys
 import copy
+import os
 
 
 class MainWindow(QMainWindow):
@@ -25,7 +26,8 @@ class MainWindow(QMainWindow):
         self.ui.settingsButton.buttonPressed.connect(self.settingsPressed)
         self.ui.tabWidget.tabBar().tabMoved.connect(self.tabMoved)
 
-        self.sharedRepos = "H:/sandbox/raphaelJ/smartshelf_shared_repository"
+        self.sharedRepos = "D:/Documents/maya/2019/prefs/scripts/smartshelf_shared_repository"
+        # self.sharedRepos = "H:/sandbox/raphaelJ/smartshelf_shared_repository"
 
         self.localRepos = self.historyPath = [
             s for s in sys.path if 'prefs' in s
@@ -72,6 +74,12 @@ class MainWindow(QMainWindow):
             self.curIconSize = QSize(iconSize, iconSize)
             self.showLocalRepos = jsonData["settings"]["isLocalReposVisible"]
             self.showSharedRepos = jsonData["settings"]["isSharedReposVisible"]
+
+            self.smartshelfSettings["settings"]["iconSize"] = iconSize
+            self.smartshelfSettings["settings"][
+                "isLocalReposVisible"] = self.showLocalRepos
+            self.smartshelfSettings["settings"][
+                "isSharedReposVisible"] = self.showSharedRepos
 
     def loadSharedRepos(self):
         self.loadRepos(self.sharedRepos, locked=True)
@@ -244,12 +252,18 @@ class MainWindow(QMainWindow):
 
     def runCommand(self, cmdObj):
         text = cmdObj.getCommand()
+        path = cmdObj.getFolderPath()
+        workingDir = os.getcwd()
 
         if text:
-            if cmdObj.isPython():
-                exec text in globals(), globals()
-            else:
-                mel.eval(text)
+            os.chdir(path)
+            try:
+                if cmdObj.isPython():
+                    exec text in globals(), globals()
+                else:
+                    mel.eval(text)
+            finally:
+                os.chdir(workingDir)
 
     def commandRemoved(self, objList):
         cmdObj = objList[0]
@@ -448,13 +462,15 @@ class MainWindow(QMainWindow):
             newLocalVisible = settingsDialog.isLocalVisible()
             if self.showLocalRepos != newLocalVisible:
                 self.showLocalRepos = newLocalVisible
-                self.smartshelfSettings["settings"]["isLocalReposVisible"] = newLocalVisible
+                self.smartshelfSettings["settings"][
+                    "isLocalReposVisible"] = newLocalVisible
                 needReload = True
 
             newSharedVisible = settingsDialog.isSharedVisible()
             if self.showSharedRepos != newSharedVisible:
                 self.showSharedRepos = newSharedVisible
-                self.smartshelfSettings["settings"]["isSharedReposVisible"] = newSharedVisible
+                self.smartshelfSettings["settings"][
+                    "isSharedReposVisible"] = newSharedVisible
                 needReload = True
 
             self.saveSmartshelfSettings()
