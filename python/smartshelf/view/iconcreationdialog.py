@@ -11,6 +11,7 @@ from PySide2.QtGui import QPixmap, QKeySequence
 import maya.mel as mel
 
 import copy
+import os
 
 
 class IconCreationDialog(QDialog):
@@ -143,12 +144,19 @@ class IconCreationDialog(QDialog):
 
     def runPressed(self):
         text = self.ui.codeTextEdit.toPlainText()
+        path = self.reposPath + "/" + self.ui.containingTabComboBox.currentText(
+        )
+        workingDir = os.getcwd()
 
         if text:
-            if self.ui.pythonButton.isChecked():
-                exec text in globals(), globals()
-            else:
-                mel.eval(text)
+            os.chdir(path)
+            try:
+                if self.ui.pythonButton.isChecked():
+                    exec text in globals(), globals()
+                else:
+                    mel.eval(text)
+            finally:
+                os.chdir(workingDir)
 
     def isPythonCode(self, state):
         if state:

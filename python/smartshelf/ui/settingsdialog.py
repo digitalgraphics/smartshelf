@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:/Documents/maya/2020/prefs/scripts/smartshelf/python/smartshelf/ui/settingsdialog.ui'
 #
-# Created: Fri Feb 26 10:34:42 2021
+# Created: Fri Feb 26 17:09:59 2021
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -133,7 +133,7 @@ class Ui_settingsDialog(object):
         QtCore.QMetaObject.connectSlotsByName(settingsDialog)
 
     def retranslateUi(self, settingsDialog):
-        settingsDialog.setWindowTitle(QtWidgets.QApplication.translate("settingsDialog", "Dialog", None, -1))
+        settingsDialog.setWindowTitle(QtWidgets.QApplication.translate("settingsDialog", "Settings", None, -1))
         self.groupBox.setTitle(QtWidgets.QApplication.translate("settingsDialog", "Tabs", None, -1))
         self.addTabButton.setText(QtWidgets.QApplication.translate("settingsDialog", "Add", None, -1))
         self.editTabButton.setText(QtWidgets.QApplication.translate("settingsDialog", "Rename", None, -1))

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:/Documents/maya/2020/prefs/scripts/smartshelf/python/smartshelf/ui/iconcreationdialog.ui'
 #
-# Created: Fri Feb 26 10:34:42 2021
+# Created: Fri Feb 26 17:09:59 2021
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -188,7 +188,7 @@ class Ui_iconCreationDialog(object):
         QtCore.QMetaObject.connectSlotsByName(iconCreationDialog)
 
     def retranslateUi(self, iconCreationDialog):
-        iconCreationDialog.setWindowTitle(QtWidgets.QApplication.translate("iconCreationDialog", "Dialog", None, -1))
+        iconCreationDialog.setWindowTitle(QtWidgets.QApplication.translate("iconCreationDialog", "Command creation", None, -1))
         self.iconPreviewLabel.setText(QtWidgets.QApplication.translate("iconCreationDialog", "Icon Preview", None, -1))
         self.shortcutNameLabel_2.setText(QtWidgets.QApplication.translate("iconCreationDialog", "Command Name", None, -1))
         self.visibleCheckBox.setText(QtWidgets.QApplication.translate("iconCreationDialog", "visible", None, -1))

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:/Documents/maya/2020/prefs/scripts/smartshelf/python/smartshelf/ui/iconsearchdialog.ui'
 #
-# Created: Fri Feb 26 10:34:42 2021
+# Created: Fri Feb 26 17:09:59 2021
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -78,7 +78,7 @@ class Ui_iconSearchDialog(object):
         QtCore.QMetaObject.connectSlotsByName(iconSearchDialog)
 
     def retranslateUi(self, iconSearchDialog):
-        iconSearchDialog.setWindowTitle(QtWidgets.QApplication.translate("iconSearchDialog", "Dialog", None, -1))
+        iconSearchDialog.setWindowTitle(QtWidgets.QApplication.translate("iconSearchDialog", "Default icon browser", None, -1))
         self.searchEdit.setPlaceholderText(QtWidgets.QApplication.translate("iconSearchDialog", "Search an icon ...", None, -1))
 
 from smartshelf.component.iconlistwidget import IconListWidget

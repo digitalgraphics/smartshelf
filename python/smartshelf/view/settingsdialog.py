@@ -2,6 +2,8 @@ from smartshelf.ui.settingsdialog import Ui_settingsDialog
 from PySide2.QtWidgets import QDialog, QListWidgetItem, QMessageBox, QInputDialog
 from PySide2.QtCore import Qt
 
+import os
+
 
 class SettingsDialog(QDialog):
     SharedCmds = 0
@@ -35,8 +37,12 @@ class SettingsDialog(QDialog):
         self.ui.sharedCmdButton.clicked.connect(self.showRadioAlert)
         self.ui.privateCmdButton.clicked.connect(self.showRadioAlert)
         self.ui.allCmdButton.clicked.connect(self.showRadioAlert)
+        self.ui.infoButton.buttonPressed.connect(self.infoPressed)
 
         self.clearType = self.NoClear
+
+    def infoPressed(self):
+        os.startfile("H:/sandbox/raphaelJ/smartshelf_documentation.pdf")
 
     def showRadioAlert(self):
         QMessageBox.warning(

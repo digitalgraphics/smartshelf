@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:/Documents/maya/2020/prefs/scripts/smartshelf/python/smartshelf/ui/mainwindow.ui'
 #
-# Created: Fri Feb 26 10:34:42 2021
+# Created: Fri Feb 26 17:09:59 2021
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -57,7 +57,7 @@ class Ui_mainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(mainWindow)
 
     def retranslateUi(self, mainWindow):
-        mainWindow.setWindowTitle(QtWidgets.QApplication.translate("mainWindow", "MainWindow", None, -1))
+        mainWindow.setWindowTitle(QtWidgets.QApplication.translate("mainWindow", "Smartshelf", None, -1))
 
 from smartshelf.component.flatbutton import FlatButton
 from smartshelf.resource import resource_rc
